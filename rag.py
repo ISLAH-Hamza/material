@@ -3,25 +3,45 @@ from langchain_openai import OpenAI, OpenAIEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from dotenv import load_dotenv
+from langchain_openai import OpenAI, OpenAIEmbeddings
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain.vectorstores import FAISS
+from dotenv import load_dotenv
+import os
+import faiss
+
 import os
 
 load_dotenv()
 
-os.environ["OPENAI_API_KEY"]="""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"""
-
-llm=OpenAI(temperature=0.5)
+os.environ["OPENAI_API_KEY"]="""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"""
 
 
-loader=PyPDFLoader(file_path='./code_commerce_maroc.pdf')
-docs=loader.load()
+llm = OpenAI(temperature=0.5)
 
-spliter=RecursiveCharacterTextSplitter()
+# Load the PDF document
+loader = PyPDFLoader(file_path='./code_commerce_maroc.pdf')
+docs = loader.load()
 
-chunks=spliter.split_documents(docs)
+# Split the documents
+splitter = RecursiveCharacterTextSplitter()
+chunks = splitter.split_documents(docs)
 
-vectors_db = Chroma.from_documents(chunks, OpenAIEmbeddings(), persist_directory="./db")
+# Create embeddings
+embeddings = OpenAIEmbeddings()
+
+# Create FAISS index
+faiss_index = FAISS.from_documents(chunks, embeddings)
+
+# Set up the retriever
+retriever = faiss_index.as_retriever(k=4)
+
+# Invoke the retriever with a query
+result = retriever.invoke('SARL')
+
+print(result)
 
 
-retriver=vectors_db.as_retriever(k=4)
 
-print(retriver.invoke('SARL'))
+# pip install langchain faiss-cpu openai python-dotenv langchain-community
